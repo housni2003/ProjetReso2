@@ -1,5 +1,15 @@
+import java.net.DatagramSocket;
+import java.net.SocketException;
+
 public class Main {
-    public static void main(String[] args) {
-        System.out.println("Hello, world!");
+    public static void main(String[] args) throws SocketException {
+
+        DatagramSocket test = new DatagramSocket(5);
+
+        int startPort = 0;  // Exemple : plage de test
+        int endPort =20000;
+
+        PortScannerUDP.scanUDPPorts(startPort, endPort);
     }
 }
+
