@@ -10,6 +10,8 @@ public class Main {
         int endPort =200;
 
         PortScannerUDP.scanUDPPorts(startPort, endPort);
+
+        ClientUDP client1 = new ClientUDP();
     }
 }
 

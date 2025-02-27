@@ -42,4 +42,10 @@ public class ClientUDP {
             System.err.println("Erreur de réception: " + e.getMessage());
         }
     }
+
+    public void fermerConnexion() {
+        // 4 - Libérer le canal
+        socketClient.close();
+        System.out.println("Connexion fermée.");
+    }
 }
