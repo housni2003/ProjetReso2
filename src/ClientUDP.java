@@ -51,6 +51,7 @@ public class ClientUDP {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         ClientUDP client = new ClientUDP("localhost", 6666);
+        client.envoyerMessage("client ajouté a la liste dans le serveur");
 
         // Thread pour écouter les messages entrants
         new Thread(() -> {
