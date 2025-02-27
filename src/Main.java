@@ -6,8 +6,8 @@ public class Main {
 
         DatagramSocket test = new DatagramSocket(5);
 
-        int startPort = 0;  // Exemple : plage de test
-        int endPort =200;
+        int startPort = 10000;  // Exemple : plage de test
+        int endPort =30000;
 
         PortScannerUDP.scanUDPPorts(startPort, endPort);
 
