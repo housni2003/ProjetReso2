@@ -37,11 +37,4 @@ public class ServerUDP {
             System.err.println("Erreur dans le serveur: " + e.getMessage());
         }
     }
-
-    // Point d'entrée du programme (démarrage manuel du serveur)
-    public static void main(String[] args) {
-        int port = 6666; // Port par défaut
-        ServerUDP serveur = new ServerUDP(port);
-        serveur.start();
-    }
 }

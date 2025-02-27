@@ -2,16 +2,32 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 
 public class Main {
-    public static void main(String[] args) throws SocketException {
+    public static void main(String[] args) {
+        int port = 6666;
 
-        DatagramSocket test = new DatagramSocket(5);
+        // Démarrage du serveur UDP dans un thread séparé
+        Thread serverThread = new Thread(() -> {
+            ServerUDP server = new ServerUDP(port);
+            server.start();
+        });
+        serverThread.start();
 
-        int startPort = 10000;  // Exemple : plage de test
-        int endPort =30000;
+        // Petite pause pour s'assurer que le serveur est prêt avant d'envoyer un message
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
-        PortScannerUDP.scanUDPPorts(startPort, endPort);
+        // Création du client UDP
+        ClientUDP client = new ClientUDP();
+        client.EmettreMessage("Hello, serveur UDP !");
+        client.recevoirMessage();
+        client.fermerConnexion();
 
-        ClientUDP client1 = new ClientUDP();
+        // Arrêter proprement après le test
+        System.exit(0);
     }
 }
+
 
