@@ -1,40 +1,56 @@
 import java.net.*;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ServerUDP {
-
     private int port;
+    private Set<InetSocketAddress> clients; // Stocke les clients connectés
 
-    // Constructeur qui permet de spécifier le port d'écoute
     public ServerUDP(int port) {
         this.port = port;
+        this.clients = new HashSet<>();
     }
 
-    // Méthode pour démarrer le serveur
     public void start() {
         try (DatagramSocket socketServeur = new DatagramSocket(port)) {
-            System.out.println("Serveur UDP démarré sur le port " + port + "...");
+            System.out.println("Serveur UDP RX302 démarré sur le port " + port + "...");
 
-            while (true) { // Boucle infinie pour écouter plusieurs requêtes
-                byte[] recues = new byte[1024]; // Tampon pour les données reçues
-                DatagramPacket paquetRecu = new DatagramPacket(recues, recues.length);
+            while (true) {
+                byte[] buffer = new byte[1024];
+                DatagramPacket paquetRecu = new DatagramPacket(buffer, buffer.length);
 
-                // Attente de la réception d'un paquet
+                // Attente de réception d'un message client
                 socketServeur.receive(paquetRecu);
                 String message = new String(paquetRecu.getData(), 0, paquetRecu.getLength());
-                System.out.println("Message reçu: " + message);
 
-                // Répondre au client avec un accusé de réception
-                InetAddress adrClient = paquetRecu.getAddress();
-                int portClient = paquetRecu.getPort();
-                String reponse = "Accusé de réception du serveur UDP";
-                byte[] envoyees = reponse.getBytes();
-                DatagramPacket paquetEnvoye = new DatagramPacket(envoyees, envoyees.length, adrClient, portClient);
-                socketServeur.send(paquetEnvoye);
+                // Récupération de l'adresse et du port du client
+                InetSocketAddress clientAddress = new InetSocketAddress(paquetRecu.getAddress(), paquetRecu.getPort());
 
-                System.out.println("Réponse envoyée au client.");
+                // Enregistrement du client s'il est nouveau
+                if (!clients.contains(clientAddress)) {
+                    clients.add(clientAddress);
+                    System.out.println("Nouveau client : " + clientAddress);
+                }
+
+                System.out.println("📩 Nouveau message de " + clientAddress + " -> " + message);
+
+                // Relayer le message à tous les clients sauf celui qui l'a envoyé
+                for (InetSocketAddress client : clients) {
+                    if (!client.equals(clientAddress)) { // Ne pas renvoyer au même client
+                        byte[] reponseData = message.getBytes();
+                        DatagramPacket paquetEnvoye = new DatagramPacket(
+                                reponseData, reponseData.length, client.getAddress(), client.getPort());
+                        socketServeur.send(paquetEnvoye);
+                    }
+                }
             }
         } catch (Exception e) {
             System.err.println("Erreur dans le serveur: " + e.getMessage());
         }
+    }
+
+    public static void main(String[] args) {
+        ServerUDP serveur = new ServerUDP(6666);
+        serveur.start();
     }
 }
