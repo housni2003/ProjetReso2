@@ -22,7 +22,6 @@ public class ClientUDP {
             byte[] envoyees = message.getBytes();
             DatagramPacket paquet = new DatagramPacket(envoyees, envoyees.length, adresseServeur, portServeur);
             socketClient.send(paquet);
-            System.out.println("Message envoyé: " + message);
         } catch (Exception e) {
             System.err.println("Erreur d'envoi: " + e.getMessage());
         }
@@ -35,9 +34,7 @@ public class ClientUDP {
             socketClient.receive(paquetRecu);
             String reponse = new String(paquetRecu.getData(), 0, paquetRecu.getLength());
 
-            InetAddress adrServeur = paquetRecu.getAddress();
-            int portServeur = paquetRecu.getPort();
-            System.out.println("Nouveau message de " + adrServeur.getHostAddress() + ":" + portServeur + " -> " + reponse);
+            System.out.println("Nouveau message : " + reponse);
         } catch (Exception e) {
             System.err.println("Erreur de réception: " + e.getMessage());
         }

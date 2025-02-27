@@ -5,10 +5,12 @@ import java.util.Map;
 public class ServerUDP {
     private int port;
     private Map<String, InetSocketAddress> clients; // Stocke les clients avec leur pseudo comme clé et leur adresse comme valeur
+    private Map<InetSocketAddress, String> adresseToPseudo; // Map entre l'adresse IP et le pseudo
 
     public ServerUDP(int port) {
         this.port = port;
         this.clients = new HashMap<>();
+        this.adresseToPseudo = new HashMap<>();
     }
 
     public void start() {
@@ -34,6 +36,7 @@ public class ServerUDP {
                     // Enregistrement du client avec son pseudo
                     if (!clients.containsKey(pseudo)) {
                         clients.put(pseudo, clientAddress);
+                        adresseToPseudo.put(clientAddress, pseudo);  // Enregistrer le pseudo avec l'adresse
                         System.out.println("Nouveau client ajouté : " + pseudo + " (" + clientAddress + ")");
                     } else {
                         System.out.println("Le pseudo " + pseudo + " est déjà utilisé.");
@@ -61,6 +64,14 @@ public class ServerUDP {
                     }
                 } else {
                     System.out.println("Message non compris: " + message);
+                }
+
+                // Afficher le message reçu avec le pseudo du client (si enregistré)
+                String pseudoClient = adresseToPseudo.get(clientAddress);  // Utilisation de l'adresse pour obtenir le pseudo
+                if (pseudoClient != null) {
+                    System.out.println("Nouveau message de " + pseudoClient + " -> " + message);
+                } else {
+                    System.out.println("Message reçu de client inconnu -> " + message);
                 }
             }
         } catch (Exception e) {
