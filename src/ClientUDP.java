@@ -22,7 +22,7 @@ public class ClientUDP {
             byte[] envoyees = message.getBytes();
             DatagramPacket paquet = new DatagramPacket(envoyees, envoyees.length, adresseServeur, portServeur);
             socketClient.send(paquet);
-            System.out.println("📤 Message envoyé : " + message);
+            System.out.println("Message envoyé: " + message);
         } catch (Exception e) {
             System.err.println("Erreur d'envoi: " + e.getMessage());
         }
@@ -37,7 +37,7 @@ public class ClientUDP {
 
             InetAddress adrServeur = paquetRecu.getAddress();
             int portServeur = paquetRecu.getPort();
-            System.out.println("📩 Nouveau message de " + adrServeur.getHostAddress() + ":" + portServeur + " -> " + reponse);
+            System.out.println("Nouveau message de " + adrServeur.getHostAddress() + ":" + portServeur + " -> " + reponse);
         } catch (Exception e) {
             System.err.println("Erreur de réception: " + e.getMessage());
         }
@@ -50,8 +50,14 @@ public class ClientUDP {
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Entrez votre pseudo : ");
+        String pseudo = scanner.nextLine();
+
         ClientUDP client = new ClientUDP("localhost", 6666);
-        client.envoyerMessage("client ajouté a la liste dans le serveur");
+
+        // Envoyer le pseudo au serveur pour l'enregistrer
+        client.envoyerMessage("pseudo:" + pseudo);
 
         // Thread pour écouter les messages entrants
         new Thread(() -> {
@@ -60,10 +66,19 @@ public class ClientUDP {
             }
         }).start();
 
+        // Interaction avec l'utilisateur pour envoyer des messages
         while (true) {
-            System.out.print("Votre message: ");
+            System.out.print("Entrez le pseudo du destinataire (ou tapez 'exit' pour quitter) : ");
+            String destinataire = scanner.nextLine();
+            if (destinataire.equalsIgnoreCase("exit")) {
+                break;
+            }
+
+            System.out.print("Entrez votre message : ");
             String message = scanner.nextLine();
-            client.envoyerMessage(message);
+            client.envoyerMessage("to:" + destinataire + ":" + message);
         }
+
+        client.fermerConnexion();
     }
 }

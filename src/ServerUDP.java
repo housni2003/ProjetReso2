@@ -1,14 +1,14 @@
 import java.net.*;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ServerUDP {
     private int port;
-    private Set<InetSocketAddress> clients; // Stocke les clients connectés
+    private Map<String, InetSocketAddress> clients; // Stocke les clients avec leur pseudo comme clé et leur adresse comme valeur
 
     public ServerUDP(int port) {
         this.port = port;
-        this.clients = new HashSet<>();
+        this.clients = new HashMap<>();
     }
 
     public void start() {
@@ -26,22 +26,41 @@ public class ServerUDP {
                 // Récupération de l'adresse et du port du client
                 InetSocketAddress clientAddress = new InetSocketAddress(paquetRecu.getAddress(), paquetRecu.getPort());
 
-                // Enregistrement du client s'il est nouveau
-                if (!clients.contains(clientAddress)) {
-                    clients.add(clientAddress);
-                    System.out.println("Nouveau client : " + clientAddress);
-                }
+                // Si le message contient le pseudo du client
+                if (message.startsWith("pseudo:")) {
+                    // Le client envoie son pseudo au serveur
+                    String pseudo = message.split(":")[1].trim();
 
-                System.out.println("📩 Nouveau message de " + clientAddress + " -> " + message);
-
-                // Relayer le message à tous les clients sauf celui qui l'a envoyé
-                for (InetSocketAddress client : clients) {
-                    if (!client.equals(clientAddress)) { // Ne pas renvoyer au même client
-                        byte[] reponseData = message.getBytes();
-                        DatagramPacket paquetEnvoye = new DatagramPacket(
-                                reponseData, reponseData.length, client.getAddress(), client.getPort());
-                        socketServeur.send(paquetEnvoye);
+                    // Enregistrement du client avec son pseudo
+                    if (!clients.containsKey(pseudo)) {
+                        clients.put(pseudo, clientAddress);
+                        System.out.println("Nouveau client ajouté : " + pseudo + " (" + clientAddress + ")");
+                    } else {
+                        System.out.println("Le pseudo " + pseudo + " est déjà utilisé.");
                     }
+
+                } else if (message.startsWith("to:")) {
+                    // Le message est destiné à un autre client
+                    String[] parts = message.split(":", 3); // Format : to:<pseudo>:<message>
+                    if (parts.length == 3) {
+                        String pseudoDestinataire = parts[1].trim();
+                        String messageDestinataire = parts[2].trim();
+
+                        // Vérifier si le destinataire est dans la liste des clients
+                        InetSocketAddress destinataire = clients.get(pseudoDestinataire);
+                        if (destinataire != null) {
+                            // Envoie du message au destinataire
+                            byte[] reponseData = messageDestinataire.getBytes();
+                            DatagramPacket paquetEnvoye = new DatagramPacket(
+                                    reponseData, reponseData.length, destinataire.getAddress(), destinataire.getPort());
+                            socketServeur.send(paquetEnvoye);
+                            System.out.println("Message envoyé à " + pseudoDestinataire + ": " + messageDestinataire);
+                        } else {
+                            System.out.println("Le client " + pseudoDestinataire + " n'est pas connecté.");
+                        }
+                    }
+                } else {
+                    System.out.println("Message non compris: " + message);
                 }
             }
         } catch (Exception e) {
