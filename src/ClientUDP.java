@@ -1,30 +1,34 @@
 import java.net.*;
+import java.util.Scanner;
 
 public class ClientUDP {
     private DatagramSocket socketClient;
-    private InetAddress adresseClient;
-    private byte[] envoyees; // tampon d'émission
-    private byte[] recues = new byte[1024]; // tampon de réception
+    private InetAddress adresseServeur;
+    private int portServeur;
+    private String pseudo;
 
-    public ClientUDP() {
+    public ClientUDP(String pseudo, String serveurAdresse, int port) {
         try {
-            // Initialisation des attributs dans le constructeur
-            socketClient = new DatagramSocket();
-            adresseClient = InetAddress.getByName("localhost");
-            System.out.println("Client UDP initialisé.");
-        } catch (UnknownHostException e) {
-            System.err.println("Erreur: Hôte inconnu.");
-        } catch (SocketException e) {
-            System.err.println("Erreur: Impossible de créer le socket.");
+            this.pseudo = pseudo;
+            this.socketClient = new DatagramSocket();
+            this.adresseServeur = InetAddress.getByName(serveurAdresse);
+            this.portServeur = port;
+            System.out.println("Client UDP initialisé en tant que " + pseudo);
+            enregistrer();
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'initialisation du client: " + e.getMessage());
         }
     }
 
-    public void EmettreMessage(String message) {
+    private void enregistrer() {
+        envoyerMessage("register:" + pseudo);
+    }
+
+    public void envoyerMessage(String message) {
         try {
-            // 2 - Émettre
-            envoyees = message.getBytes();
-            DatagramPacket messageEnvoye = new DatagramPacket(envoyees, envoyees.length, adresseClient, 6666);
-            socketClient.send(messageEnvoye);
+            byte[] envoyees = message.getBytes();
+            DatagramPacket paquetEnvoye = new DatagramPacket(envoyees, envoyees.length, adresseServeur, portServeur);
+            socketClient.send(paquetEnvoye);
             System.out.println("Message envoyé: " + message);
         } catch (Exception e) {
             System.err.println("Erreur d'envoi: " + e.getMessage());
@@ -33,19 +37,43 @@ public class ClientUDP {
 
     public void recevoirMessage() {
         try {
-            // 3 - Recevoir
+            byte[] recues = new byte[1024];
             DatagramPacket paquetRecu = new DatagramPacket(recues, recues.length);
             socketClient.receive(paquetRecu);
             String reponse = new String(paquetRecu.getData(), 0, paquetRecu.getLength());
-            System.out.println("Depuis le serveur: " + reponse);
+            System.out.println("Message du serveur: " + reponse);
         } catch (Exception e) {
             System.err.println("Erreur de réception: " + e.getMessage());
         }
     }
 
     public void fermerConnexion() {
-        // 4 - Libérer le canal
         socketClient.close();
         System.out.println("Connexion fermée.");
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Entrez votre pseudo: ");
+        String pseudo = scanner.nextLine();
+
+        ClientUDP client = new ClientUDP(pseudo, "localhost", 6666);
+
+        Thread receptionThread = new Thread(() -> {
+            while (true) {
+                client.recevoirMessage();
+            }
+        });
+        receptionThread.start();
+
+        while (true) {
+            System.out.print("💬 Entrez un message (destinataire:message ou 'broadcast:message') : ");
+            String message = scanner.nextLine();
+            if (message.equalsIgnoreCase("exit")) break;
+            client.envoyerMessage(message);
+        }
+
+        client.fermerConnexion();
+        scanner.close();
     }
 }
