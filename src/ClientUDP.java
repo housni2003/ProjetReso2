@@ -67,7 +67,7 @@ public class ClientUDP {
         receptionThread.start();
 
         while (true) {
-            System.out.print("💬 Entrez un message (destinataire:message ou 'broadcast:message') : ");
+            System.out.print("Entrez un message (destinataire:message ou 'broadcast:message') : ");
             String message = scanner.nextLine();
             if (message.equalsIgnoreCase("exit")) break;
             client.envoyerMessage(message);

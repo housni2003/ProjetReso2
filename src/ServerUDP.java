@@ -12,43 +12,32 @@ public class ServerUDP {
 
     public void start() {
         try (DatagramSocket socketServeur = new DatagramSocket(port)) {
-            System.out.println("Serveur UDP démarré sur le port " + port);
+            System.out.println("Serveur UDP démarré sur " + getLocalIPAddress() + ":" + port);
 
             while (true) {
                 byte[] buffer = new byte[1024];
                 DatagramPacket paquetRecu = new DatagramPacket(buffer, buffer.length);
-
-                // Attente de réception d'un message
                 socketServeur.receive(paquetRecu);
+
                 String message = new String(paquetRecu.getData(), 0, paquetRecu.getLength());
                 InetAddress clientAddress = paquetRecu.getAddress();
                 int clientPort = paquetRecu.getPort();
-
-                System.out.println("Message reçu de " + clientAddress + ":" + clientPort + " → " + message);
+                System.out.println("Message reçu de " + clientAddress + ":" + clientPort + " -> " + message);
 
                 String[] parts = message.split(":", 2);
                 if (parts.length < 2) continue;
-
                 String command = parts[0];
                 String content = parts[1];
 
-                // Enregistrement d'un nouvel utilisateur
                 if (command.equals("register")) {
                     clients.put(content, new InetSocketAddress(clientAddress, clientPort));
-                    System.out.println("👤 Nouvel utilisateur enregistré : " + content);
+                    System.out.println("Nouvel utilisateur enregistré : " + content);
                     envoyerMessage(socketServeur, new InetSocketAddress(clientAddress, clientPort), "Bienvenue " + content + " !");
-                }
-                // Message privé
-                else if (clients.containsKey(command)) {
+                } else if (command.equals("broadcast")) {
+                    broadcastMessage(socketServeur, "Message de " + getPseudo(clientAddress, clientPort) + " : " + content);
+                } else if (clients.containsKey(command)) {
                     InetSocketAddress destClient = clients.get(command);
-                    envoyerMessage(socketServeur, destClient, "💬 Message de " + getPseudo(clientAddress, clientPort) + " : " + content);
-                }
-                // Message broadcast (envoyé à tout le monde)
-                else if (command.equals("broadcast")) {
-                    for (InetSocketAddress destClient : clients.values()) {
-                        envoyerMessage(socketServeur, destClient, "Broadcast de " + getPseudo(clientAddress, clientPort) + " : " + content);
-                    }
-                    System.out.println("Message broadcast envoyé à tous les clients.");
+                    envoyerMessage(socketServeur, destClient, "Message de " + getPseudo(clientAddress, clientPort) + " : " + content);
                 } else {
                     envoyerMessage(socketServeur, new InetSocketAddress(clientAddress, clientPort), "Utilisateur inconnu.");
                 }
@@ -65,6 +54,13 @@ public class ServerUDP {
         System.out.println("Message envoyé à " + dest);
     }
 
+    private void broadcastMessage(DatagramSocket socket, String message) throws Exception {
+        for (InetSocketAddress client : clients.values()) {
+            envoyerMessage(socket, client, message);
+        }
+        System.out.println("Broadcast envoyé à tous les utilisateurs.");
+    }
+
     private String getPseudo(InetAddress address, int port) {
         for (Map.Entry<String, InetSocketAddress> entry : clients.entrySet()) {
             if (entry.getValue().getAddress().equals(address) && entry.getValue().getPort() == port) {
@@ -74,8 +70,16 @@ public class ServerUDP {
         return "Inconnu";
     }
 
+    private String getLocalIPAddress() {
+        try {
+            return InetAddress.getLocalHost().getHostAddress();
+        } catch (Exception e) {
+            return "127.0.0.1";
+        }
+    }
+
     public static void main(String[] args) {
-        int port = 6666; // Choisir un port d'écoute
+        int port = 6666;
         ServerUDP server = new ServerUDP(port);
         server.start();
     }
