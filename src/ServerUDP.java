@@ -41,9 +41,16 @@ public class ServerUDP {
                 String content = parts[1];
 
                 if (command.equals("register")) {
-                    clients.put(content, new InetSocketAddress(clientAddress, clientPort));
-                    System.out.println("Nouvel utilisateur enregistré : " + content);
-                    envoyerMessage(socketServeur, new InetSocketAddress(clientAddress, clientPort), "Bienvenue " + content + " !");
+                    // Vérifier si le pseudo est déjà pris
+                    if (clients.containsKey(content)) {
+                        // Si le pseudo est déjà pris, envoyer un message d'erreur
+                        envoyerMessage(socketServeur, new InetSocketAddress(clientAddress, clientPort), "Pseudo déjà pris. Veuillez en choisir un autre.");
+                    } else {
+                        // Si le pseudo est libre, l'enregistrer
+                        clients.put(content, new InetSocketAddress(clientAddress, clientPort));
+                        System.out.println("Nouvel utilisateur enregistré : " + content);
+                        envoyerMessage(socketServeur, new InetSocketAddress(clientAddress, clientPort), "Bienvenue " + content + " !");
+                    }
                 } else if (command.equals("broadcast")) {
                     broadcastMessage(socketServeur, "Message de " + getPseudo(clientAddress, clientPort) + " : " + content, clientAddress, clientPort);
                 } else if (command.equals("disconnect")) {

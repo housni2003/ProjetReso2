@@ -33,9 +33,34 @@ public class ClientUDP {
 
     /**
      * Enregistre l'utilisateur auprès du serveur en envoyant un message "register:pseudo".
+     * Si le pseudo est déjà pris, il redemande un autre pseudo.
      */
     private void enregistrer() {
-        envoyerMessage("register:" + pseudo);
+        boolean pseudoValide = false;
+        while (!pseudoValide) {
+            envoyerMessage("register:" + pseudo);
+
+            // Attente d'une réponse du serveur
+            try {
+                byte[] recues = new byte[1024];
+                DatagramPacket paquetRecu = new DatagramPacket(recues, recues.length);
+                socketClient.receive(paquetRecu);
+                String reponse = new String(paquetRecu.getData(), 0, paquetRecu.getLength());
+
+                if (reponse.equals("Pseudo déjà pris. Veuillez en choisir un autre.")) {
+                    // Si le serveur dit que le pseudo est déjà pris, redemander un autre pseudo
+                    System.out.println("Le pseudo est déjà pris. Veuillez en choisir un autre.");
+                    Scanner scanner = new Scanner(System.in);
+                    System.out.print("Entrez un nouveau pseudo: ");
+                    pseudo = scanner.nextLine();
+                } else {
+                    System.out.println(reponse);  // Message de bienvenue
+                    pseudoValide = true;
+                }
+            } catch (Exception e) {
+                System.err.println("Erreur d'envoi: " + e.getMessage());
+            }
+        }
     }
 
     /**
@@ -94,7 +119,7 @@ public class ClientUDP {
 
         ClientUDP client = new ClientUDP(pseudo, "localhost", 1234);
 
-        // Thread pour les msg
+        // Thread pour recevoir les messages
         Thread receptionThread = new Thread(client::recevoirMessage);
         receptionThread.start();
 
