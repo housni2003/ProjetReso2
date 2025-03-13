@@ -2,14 +2,25 @@ import java.net.*;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Classe représentant un serveur UDP permettant de gérer plusieurs clients et de transmettre leurs messages.
+ */
 public class ServerUDP {
     private int port;
     private Map<String, InetSocketAddress> clients = new HashMap<>();
 
+    /**
+     * Constructeur du serveur UDP.
+     *
+     * @param port Le port sur lequel le serveur écoutera les connexions.
+     */
     public ServerUDP(int port) {
         this.port = port;
     }
 
+    /**
+     * Démarre le serveur UDP et écoute les messages des clients.
+     */
     public void start() {
         try (DatagramSocket socketServeur = new DatagramSocket(port)) {
             System.out.println("Serveur UDP démarré sur " + getLocalIPAddress() + ":" + port);
@@ -55,6 +66,14 @@ public class ServerUDP {
         }
     }
 
+    /**
+     * Envoie un message à un client spécifique.
+     *
+     * @param socket  Le socket du serveur.
+     * @param dest    L'adresse du client destinataire.
+     * @param message Le message à envoyer.
+     * @throws Exception En cas d'erreur d'envoi.
+     */
     private void envoyerMessage(DatagramSocket socket, InetSocketAddress dest, String message) throws Exception {
         byte[] data = message.getBytes();
         DatagramPacket paquet = new DatagramPacket(data, data.length, dest.getAddress(), dest.getPort());
@@ -62,6 +81,15 @@ public class ServerUDP {
         System.out.println("Message envoyé à " + dest);
     }
 
+    /**
+     * Diffuse un message à tous les clients connectés, sauf l'expéditeur.
+     *
+     * @param socket        Le socket du serveur.
+     * @param message       Le message à diffuser.
+     * @param senderAddress L'adresse de l'expéditeur.
+     * @param senderPort    Le port de l'expéditeur.
+     * @throws Exception En cas d'erreur d'envoi.
+     */
     private void broadcastMessage(DatagramSocket socket, String message, InetAddress senderAddress, int senderPort) throws Exception {
         for (InetSocketAddress client : clients.values()) {
             if (!client.getAddress().equals(senderAddress) || client.getPort() != senderPort) {
@@ -71,6 +99,12 @@ public class ServerUDP {
         System.out.println("Broadcast envoyé.");
     }
 
+    /**
+     * Retire un client de la liste des utilisateurs connectés.
+     *
+     * @param address L'adresse IP du client.
+     * @param port    Le port du client.
+     */
     private void removeClient(InetAddress address, int port) {
         String pseudoToRemove = getPseudo(address, port);
         if (!pseudoToRemove.equals("Inconnu")) {
@@ -79,6 +113,13 @@ public class ServerUDP {
         }
     }
 
+    /**
+     * Récupère le pseudo d'un utilisateur en fonction de son adresse et de son port.
+     *
+     * @param address L'adresse IP du client.
+     * @param port    Le port du client.
+     * @return Le pseudo du client ou "Inconnu" s'il n'est pas trouvé.
+     */
     private String getPseudo(InetAddress address, int port) {
         for (Map.Entry<String, InetSocketAddress> entry : clients.entrySet()) {
             if (entry.getValue().getAddress().equals(address) && entry.getValue().getPort() == port) {
@@ -88,6 +129,11 @@ public class ServerUDP {
         return "Inconnu";
     }
 
+    /**
+     * Récupère l'adresse IP locale du serveur.
+     *
+     * @return L'adresse IP sous forme de chaîne de caractères.
+     */
     private String getLocalIPAddress() {
         try {
             return InetAddress.getLocalHost().getHostAddress();
@@ -96,6 +142,11 @@ public class ServerUDP {
         }
     }
 
+    /**
+     * Programme principal permettant de lancer le serveur.
+     *
+     * @param args Arguments de la ligne de commande (non utilisés).
+     */
     public static void main(String[] args) {
         int port = 6666;
         ServerUDP server = new ServerUDP(port);

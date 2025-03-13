@@ -1,6 +1,9 @@
 import java.net.*;
 import java.util.Scanner;
 
+/**
+ * Classe représentant un client UDP permettant d'envoyer et de recevoir des messages.
+ */
 public class ClientUDP {
     private DatagramSocket socketClient;
     private InetAddress adresseServeur;
@@ -8,6 +11,13 @@ public class ClientUDP {
     private String pseudo;
     private boolean enCoursExecution = true;
 
+    /**
+     * Constructeur du client UDP.
+     *
+     * @param pseudo         Le pseudo de l'utilisateur.
+     * @param serveurAdresse L'adresse du serveur.
+     * @param port           Le port du serveur.
+     */
     public ClientUDP(String pseudo, String serveurAdresse, int port) {
         try {
             this.pseudo = pseudo;
@@ -21,10 +31,18 @@ public class ClientUDP {
         }
     }
 
+    /**
+     * Enregistre l'utilisateur auprès du serveur en envoyant un message "register:pseudo".
+     */
     private void enregistrer() {
         envoyerMessage("register:" + pseudo);
     }
 
+    /**
+     * Envoie un message au serveur.
+     *
+     * @param message Le message à envoyer.
+     */
     public void envoyerMessage(String message) {
         try {
             byte[] envoyees = message.getBytes();
@@ -35,6 +53,9 @@ public class ClientUDP {
         }
     }
 
+    /**
+     * Attend et affiche un message reçu du serveur.
+     */
     public void recevoirMessage() {
         try {
             while (enCoursExecution) {
@@ -51,6 +72,9 @@ public class ClientUDP {
         }
     }
 
+    /**
+     * Ferme la connexion du client en envoyant un message de déconnexion.
+     */
     public void fermerConnexion() {
         envoyerMessage("disconnect:");
         enCoursExecution = false;
@@ -58,6 +82,11 @@ public class ClientUDP {
         System.out.println("Connexion fermée.");
     }
 
+    /**
+     * Programme principal permettant d'exécuter le client UDP.
+     *
+     * @param args Arguments de la ligne de commande (non utilisés).
+     */
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         System.out.print("Entrez votre pseudo: ");
@@ -65,6 +94,7 @@ public class ClientUDP {
 
         ClientUDP client = new ClientUDP(pseudo, "localhost", 6666);
 
+        // Thread pour écouter les messages entrants
         Thread receptionThread = new Thread(client::recevoirMessage);
         receptionThread.start();
 
