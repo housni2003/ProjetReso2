@@ -92,7 +92,7 @@ public class ClientUDP {
         System.out.print("Entrez votre pseudo: ");
         String pseudo = scanner.nextLine();
 
-        ClientUDP client = new ClientUDP(pseudo, "localhost", 6666);
+        ClientUDP client = new ClientUDP(pseudo, "localhost", 1234);
 
         // Thread pour écouter les messages entrants
         Thread receptionThread = new Thread(client::recevoirMessage);

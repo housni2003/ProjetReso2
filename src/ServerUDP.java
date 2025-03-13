@@ -148,7 +148,7 @@ public class ServerUDP {
      * @param args Arguments de la ligne de commande (non utilisés).
      */
     public static void main(String[] args) {
-        int port = 6666;
+        int port = 1234;
         ServerUDP server = new ServerUDP(port);
         server.start();
     }
