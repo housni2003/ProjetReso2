@@ -88,10 +88,6 @@ public class ServerUDP {
         return "Inconnu";
     }
 
-    private String getConnectedUsers() {
-        return String.join(", ", clients.keySet());
-    }
-
     private String getLocalIPAddress() {
         try {
             return InetAddress.getLocalHost().getHostAddress();
