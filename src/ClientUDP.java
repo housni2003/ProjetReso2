@@ -94,7 +94,7 @@ public class ClientUDP {
 
         ClientUDP client = new ClientUDP(pseudo, "localhost", 1234);
 
-        // Thread pour écouter les messages entrants
+        // Thread pour les msg
         Thread receptionThread = new Thread(client::recevoirMessage);
         receptionThread.start();
 
