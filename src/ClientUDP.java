@@ -69,13 +69,16 @@ public class ClientUDP {
         receptionThread.start();
 
         while (true) {
-            System.out.print("Entrez un message (destinataire:message ou 'broadcast:message') : ");
+            System.out.print("Entrez un message (destinataire:message, 'broadcast:message' ou 'list') : ");
             String message = scanner.nextLine();
             if (message.equalsIgnoreCase("exit")) {
                 client.fermerConnexion();
                 break;
+            } else if (message.equalsIgnoreCase("list")) {
+                client.envoyerMessage("list:");
+            } else {
+                client.envoyerMessage(message);
             }
-            client.envoyerMessage(message);
         }
 
         scanner.close();

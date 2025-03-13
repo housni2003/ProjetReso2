@@ -37,6 +37,12 @@ public class ServerUDP {
                     broadcastMessage(socketServeur, "Message de " + getPseudo(clientAddress, clientPort) + " : " + content, clientAddress, clientPort);
                 } else if (command.equals("disconnect")) {
                     removeClient(clientAddress, clientPort);
+                } else if (command.equals("list")) {
+                    StringBuilder listMessage = new StringBuilder("Utilisateurs connectés:\n");
+                    for (String pseudo : clients.keySet()) {
+                        listMessage.append(pseudo).append("\n");
+                    }
+                    envoyerMessage(socketServeur, new InetSocketAddress(clientAddress, clientPort), listMessage.toString());
                 } else if (clients.containsKey(command)) {
                     InetSocketAddress destClient = clients.get(command);
                     envoyerMessage(socketServeur, destClient, "Message de " + getPseudo(clientAddress, clientPort) + " : " + content);
@@ -58,7 +64,7 @@ public class ServerUDP {
 
     private void broadcastMessage(DatagramSocket socket, String message, InetAddress senderAddress, int senderPort) throws Exception {
         for (InetSocketAddress client : clients.values()) {
-            if (!client.getAddress().equals(senderAddress) || client.getPort() != senderPort) {  // Exclure l'expéditeur
+            if (!client.getAddress().equals(senderAddress) || client.getPort() != senderPort) {
                 envoyerMessage(socket, client, message);
             }
         }
@@ -80,6 +86,10 @@ public class ServerUDP {
             }
         }
         return "Inconnu";
+    }
+
+    private String getConnectedUsers() {
+        return String.join(", ", clients.keySet());
     }
 
     private String getLocalIPAddress() {
